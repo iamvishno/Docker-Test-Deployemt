@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iris Flower Classification</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌸 Iris Flower Classification</h1>
+            <p>Predict iris flower species using machine learning</p>
+        </div>
+
+        <div class="card">
+            <h2>Enter Flower Measurements</h2>
+            <form id="predictionForm">
+                <div class="form-group">
+                    <label for="sepal_length">Sepal Length (cm):</label>
+                    <input type="number" id="sepal_length" name="sepal_length" step="0.1" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sepal_width">Sepal Width (cm):</label>
+                    <input type="number" id="sepal_width" name="sepal_width" step="0.1" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="petal_length">Petal Length (cm):</label>
+                    <input type="number" id="petal_length" name="petal_length" step="0.1" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="petal_width">Petal Width (cm):</label>
+                    <input type="number" id="petal_width" name="petal_width" step="0.1" min="0" required>
+                </div>
+
+                <button type="submit" class="btn">Predict</button>
+            </form>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Predicting...</p>
+            </div>
+
+            <div id="result" class="result hidden">
+                <h3>Prediction Result</h3>
+                <div class="prediction-box">
+                    <p class="species-name" id="speciesName"></p>
+                </div>
+
+                <div class="probabilities">
+                    <h4>Confidence Scores:</h4>
+                    <div id="probabilitiesContainer"></div>
+                </div>
+            </div>
+
+            <div id="error" class="error hidden"></div>
+        </div>
+
+        <div class="info-card">
+            <h3>📊 Example Values</h3>
+            <p><strong>Setosa:</strong> 5.0, 3.4, 1.5, 0.2</p>
+            <p><strong>Versicolor:</strong> 6.0, 2.7, 5.1, 1.6</p>
+            <p><strong>Virginica:</strong> 7.5, 4.0, 6.7, 2.0</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const loadingDiv = document.getElementById('loading');
+        const resultDiv = document.getElementById('result');
+        const errorDiv = document.getElementById('error');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                sepal_length: parseFloat(document.getElementById('sepal_length').value),
+                sepal_width: parseFloat(document.getElementById('sepal_width').value),
+                petal_length: parseFloat(document.getElementById('petal_length').value),
+                petal_width: parseFloat(document.getElementById('petal_width').value)
+            };
+
+            // Show loading, hide results
+            loadingDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.detail || 'Prediction failed');
+                }
+
+                // Display prediction
+                document.getElementById('speciesName').textContent = `Species: ${result.class}`;
+
+                // Display probabilities
+                const probContainer = document.getElementById('probabilitiesContainer');
+                probContainer.innerHTML = '';
+
+                for (const [species, prob] of Object.entries(result.probabilities)) {
+                    const percentage = (prob * 100).toFixed(2);
+                    const div = document.createElement('div');
+                    div.className = 'probability-item';
+                    div.innerHTML = `
+                        <span class="species">${species}</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="percentage">${percentage}%</span>
+                    `;
+                    probContainer.appendChild(div);
+                }
+
+                resultDiv.classList.remove('hidden');
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
