@@ -40,12 +40,12 @@ jobs:
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/dockertestapp:v1.0
-            docker stop dockeririsappimage || true
-            docker rm dockeririsappimage || true
-            docker run -d --name dockeririsappimage -p 8000:8000 --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/dockertestapp:v1.0
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/dockertestapp:v1.0
+            sudo docker stop dockeririsappimage || true
+            sudo docker rm dockeririsappimage || true
+            sudo docker run -d --name dockeririsappimage -p 8000:8000 --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/dockertestapp:v1.0
             echo "Deployment complete!"
-            docker ps
+            sudo docker ps
 
 
 
